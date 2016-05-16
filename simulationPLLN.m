@@ -18,6 +18,13 @@ function out =  simulationPLLN(p)
     % Total simulation time
     p.totalTime = p.timeVec(end)-p.timeVec(1);
     
+    % If 'p.initialMomentVec' is scalar 0, make a vector
+    if length(p.initialMomentVec)==1
+        if p.initialMomentVec==0
+            p.initialMomentVec = zeros(1,6);
+        end
+    end
+    
     % Calculating coagulation sink factor
     p.coagSinkFactor = coag_kernel_dp(5e-9,p.coagSinkCMD,p.T,p.rho)*2*pi*5e-9^(-p.coagSinkExponent);
     
@@ -43,11 +50,11 @@ function out =  simulationPLLN(p)
     out.t = t; 
     out.Y = Y;
     out.p = p;
-    out.N3 = Y(:,4);
+    out.N_LN = Y(:,4);
     [cmdVec,ln2sVec] = laskeCmdLn2s(Y(:,4),Y(:,5),Y(:,6));
     
-    out.CMD3 = cmdVec;
-    out.sigma3 = exp(sqrt(ln2sVec));
+    out.CMD = cmdVec;
+    out.sigma = exp(sqrt(ln2sVec));
 
     alpha0Vec=zeros(size(Y(:,1)));
     dd0Vec=alpha0Vec;
@@ -55,12 +62,12 @@ function out =  simulationPLLN(p)
         [alpha0Vec(i),dd0Vec(i)]=laskeAlphaDTaulukoista(Y(i,3)/Y(i,1)/p.mCluster,Y(i,3)/Y(i,2)/p.dCluster,p);
     end
     
-    out.N0 = Y(:,1);
-    out.alpha0 = alpha0Vec;
-    out.d2_0 = p.dCluster./dd0Vec;
+    out.N_PL = Y(:,1);
+    out.alpha = alpha0Vec;
+    out.D2 = p.dCluster./dd0Vec;
     out.N = Y(:,1)+Y(:,4);
-    out.S = Y(:,2)+Y(:,5);
-    out.M = Y(:,3)+Y(:,6);
+    out.M_2 = Y(:,2)+Y(:,5);
+    out.M_3 = Y(:,3)+Y(:,6);
     
     % Computing GMD and GSD of the total distr.
     [gmdVec,gsdVec] = laskeGmdGsdNumeerisesti(Y(:,1),alpha0Vec,p.dCluster,dd0Vec,Y(:,4),cmdVec,ln2sVec);

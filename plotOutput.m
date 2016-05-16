@@ -11,14 +11,14 @@ if strcmp(out.p.model(1:2),'FS')
     ylabel('N (cm^{-3})')
 
     subplot(1,3,2)
-    plot(out.t,out.S)
+    plot(out.t,out.M_2)
     xlabel('t (s)')
-    ylabel('S (m^2 cm^{-3})')
+    ylabel('M_2 (m^2 cm^{-3})')
 
     subplot(1,3,3)
-    plot(out.t,out.M)
+    plot(out.t,out.M_3)
     xlabel('t (s)')
-    ylabel('M (m^3 cm^{-3})')
+    ylabel('M_3 (m^3 cm^{-3})')
 
 else
     hf=figure(2);
@@ -31,25 +31,25 @@ else
     ylabel('N_{PL} (cm^{-3})')
 
     subplot(2,5,2)
-    plot(out.t,out.alpha0)
+    plot(out.t,out.alpha)
     xlabel('t (s)')
     ylabel('\alpha')
-    ylim([out.alpha0(end)-1 out.alpha0(end)+1])
+    ylim([out.alpha(end)-1 out.alpha(end)+1])
 
     subplot(2,5,3)
-    plot(out.t,out.d2_0*1e9)
+    plot(out.t,out.D2*1e9)
     xlabel('t (s)')
-    ylabel('D2 (nm)')
+    ylabel('D_2 (nm)')
     
     subplot(2,5,4)
     plot(out.t,out.Y(:,2))
     xlabel('t (s)')
-    ylabel('S_{PL} (m^2 cm^{-3})')
+    ylabel('M_{PL,2} (m^2 cm^{-3})')
     
     subplot(2,5,5)
     plot(out.t,out.Y(:,3))
     xlabel('t (s)')
-    ylabel('M_{PL} (m^3 cm^{-3})')
+    ylabel('M_{PL,3} (m^3 cm^{-3})')
 
     subplot(2,5,6)
     plot(out.t,out.Y(:,4))
@@ -57,24 +57,24 @@ else
     ylabel('N_{LN} (cm^{-3})')
 
     subplot(2,5,7)
-    plot(out.t,out.CMD3*1e9)
+    plot(out.t,out.CMD*1e9)
     xlabel('t (s)')
-    ylabel('CMD_{LN} (nm)')
+    ylabel('CMD (nm)')
 
     subplot(2,5,8)
-    plot(out.t,out.sigma3)
+    plot(out.t,out.sigma)
     xlabel('t (s)')
-    ylabel('\sigma_{LN}')
+    ylabel('\sigma')
     
     subplot(2,5,9)
     plot(out.t,out.Y(:,5))
     xlabel('t (s)')
-    ylabel('S_{LN} (m^2 cm^{-3})')
+    ylabel('M_{LN,2} (m^2 cm^{-3})')
     
     subplot(2,5,10)
     plot(out.t,out.Y(:,6))
     xlabel('t (s)')
-    ylabel('M_{LN} (m^3 cm^{-3})')
+    ylabel('M_{LN,3} (m^3 cm^{-3})')
 end
 
 end

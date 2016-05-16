@@ -6,20 +6,24 @@
 % PLLN:  combined power law and log-normal
 % FSn:   fixed-sectional, where n is the number of sections (not yet in
 %           this version)
-p.model = 'PLLN';
+p.model = 'LN';
 
 % new particle formation rates, J
 % first row:    times (s)
 % second row:   J (#/cm3 s)
-p.JMatrix = [0 18000; 0.1 0.1];
+p.JMatrix = [0 3600; 0 1];
 
-% diameter of a newly formed particle (m)
-p.dCluster = 1.6e-9;
+% Diameter of a newly formed particle (m)
+% It is also the lowest diameter in the FS model.
+p.dCluster = 1e-9;
+
+% The highest diameter in the FS model
+p.highestDiameter = 100e-9;
 
 % condensational growth rates, GR
 % first row:    times (s)
 % second row:   GR (m/s)
-p.GRMatrix = [0 18000; 1e-9/3600 1e-9/3600];
+p.GRMatrix = [0 3600; 0 3e-12];
 
 % Is condensational transfer on?
 % Only applicable with the PLLN model
@@ -82,7 +86,7 @@ p.losses = 1;
     p.lossesExponent = -1;
     
 % Time vector (s)
-p.timeVec = 0:18000;
+p.timeVec = 0:3600;
 
 % Initial moment vector
 p.initialMomentVec = zeros(1,6);

@@ -2,7 +2,7 @@ function out =  simulationFS(p)
 %SIMULATIONFS simulates the FS model using input parameter set 'p'    
 
     nSec = n_sec(p.model);
-    Dp_edges = logspace(log10(p.dCluster),-7,nSec+1);
+    Dp_edges = logspace(log10(p.dCluster),log10(p.highestDiameter),nSec+1);
     logEdges = log10(Dp_edges);
     logCenters = logEdges(1:end-1) + diff(logEdges)./2;
     Dp_centers = 10.^(logCenters); 
@@ -21,6 +21,13 @@ function out =  simulationFS(p)
 
     % Total simulation time
     p.totalTime = p.timeVec(end)-p.timeVec(1);
+    
+    % If 'p.initialMomentVec' is scalar 0, make a vector
+    if length(p.initialMomentVec)==1
+        if p.initialMomentVec==0
+            p.initialMomentVec = zeros(1,nSec);
+        end
+    end
 
     % Options to ODE solver
     options = odeset('RelTol',p.relativeTolerance,'nonnegative',1:nSec,'stats','off');
@@ -46,16 +53,16 @@ function out =  simulationFS(p)
 
     % Zeros
     out.N = zeros(length(t),1);
-    out.S = out.N;
-    out.M = out.N;
+    out.M_2 = out.N;
+    out.M_3 = out.N;
     out.GMD = out.N;
     out.GSD = out.N;
 
     % Update values
     for i=1:length(t)
         out.N(i) = sum(Y(i,:));
-        out.S(i) = sum(Y(i,:).*p.Dp_centers.^2);
-        out.M(i) = sum(Y(i,:).*p.Dp_centers.^3);
+        out.M_2(i) = sum(Y(i,:).*p.Dp_centers.^2);
+        out.M_3(i) = sum(Y(i,:).*p.Dp_centers.^3);
         lngmd = sum(Y(i,:).*log(p.Dp_centers))/sum(Y(i,:));
         ln2gsd = sum(Y(i,:).*(log(p.Dp_centers)-lngmd).^2)/sum(Y(i,:));
         out.GMD(i) = exp(lngmd);
