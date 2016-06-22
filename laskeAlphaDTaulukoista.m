@@ -1,4 +1,4 @@
-function [alphaLaskettu,dLaskettu] = laskeAlphaDTaulukoista(Aoikea,Boikea,p)
+function [alphaLaskettu,dLaskettu] = laskeAlphaDTaulukoista(Aoikea,Boikea,p,alphaInit,dInit)
 
     if Aoikea < 1
         alphaLaskettu=1;
@@ -26,7 +26,19 @@ function [alphaLaskettu,dLaskettu] = laskeAlphaDTaulukoista(Aoikea,Boikea,p)
         return
     end
     
-    alphaLaskettu=p.alphaTaulukko(Aoikea,Boikea);
-    dLaskettu=p.dTaulukko(Aoikea,Boikea);
+    if p.PLEquations == 1
+        alphaLaskettu=p.alphaTaulukko(Aoikea,Boikea);
+        dLaskettu=p.dTaulukko(Aoikea,Boikea);
+        
+    else
+        [alphaLaskettu, dLaskettu] = LMAEquations(Aoikea,Boikea,alphaInit,dInit);
+    end
 
+    if ~isreal(alphaLaskettu)
+        error('imag alpha')
+    end
+    
+    if ~isreal(dLaskettu)
+        error('imag d')
+    end    
 end

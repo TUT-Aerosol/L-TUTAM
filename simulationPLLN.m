@@ -29,8 +29,8 @@ function out =  simulationPLLN(p)
     p.coagSinkFactor = coag_kernel_dp(5e-9,p.coagSinkCMD,p.T,p.rho)*2*pi*5e-9^(-p.coagSinkExponent);
     
     % Options to ODE solver
-    options = odeset('RelTol',p.relativeTolerance,'nonnegative',1:6,'stats','off');
-    
+    options = odeset('RelTol',p.relativeTolerance,'nonnegative',1:6,'stats','off','outputfcn',@modelOutputFunc);
+        
     if p.plotWaitbarDuringSim
         hWait = waitbar(0,'Simulating...');
     end
@@ -58,8 +58,17 @@ function out =  simulationPLLN(p)
 
     alpha0Vec=zeros(size(Y(:,1)));
     dd0Vec=alpha0Vec;
+
     for i=1:length(Y(:,1))
-        [alpha0Vec(i),dd0Vec(i)]=laskeAlphaDTaulukoista(Y(i,3)/Y(i,1)/p.mCluster,Y(i,3)/Y(i,2)/p.dCluster,p);
+        if i==1
+            alphaBefore=0;
+            dBefore=0.5;
+        else
+            alphaBefore=alpha0Vec(i-1);
+            dBefore=dd0Vec(i-1);
+        end
+        
+        [alpha0Vec(i),dd0Vec(i)]=laskeAlphaDTaulukoista(Y(i,3)/Y(i,1)/p.mCluster,Y(i,3)/Y(i,2)/p.dCluster,p,alphaBefore,dBefore);
     end
     
     out.N_PL = Y(:,1);
@@ -77,7 +86,7 @@ function out =  simulationPLLN(p)
     % Removing a large interpolation table from the output struct
     out.p=rmfield(out.p,'alphaTaulukko');
     out.p=rmfield(out.p,'dTaulukko');
-
+    
 end
 
 
@@ -101,7 +110,12 @@ function dy = modelFunc(t,y,param)
         
     A=y(3)/y(1)/m1_0;
     B=y(3)/y(2)/d1_0;
-    [alpha0,dd0] = laskeAlphaDTaulukoista(A,B,param);
+    
+    % Previous step values are used as initial guesses for computing
+    % alpha and d iteratively.
+    alphaBefore=evalin('base','alphaPrev');
+    dBefore=evalin('base','dPrev');
+    [alpha0,dd0] = laskeAlphaDTaulukoista(A,B,param,alphaBefore,dBefore);
     
     d2_0=param.dCluster/dd0;
     
@@ -109,22 +123,6 @@ function dy = modelFunc(t,y,param)
     param.J=param.JMatrix(2,find(t<=param.JMatrix(1,:),1));
     param.GR=param.GRMatrix(2,find(t<=param.GRMatrix(1,:),1));
     
-    % Plotting the distr.
-    if param.plotDistrDuringSim
-        figure(1)
-        clf
-        plot_lognormal_parameters_powerlaw(y(1),alpha0,d1_0,d2_0,y(4),cmd,ln2s);
-
-        ylim([max(param.JMatrix(2,:))/100 max(param.JMatrix(2,:))*10]*param.totalTime)
-        xlim([1 100])
-        set(gca,'yscale','log')
-        title(strcat('t= ',num2str(t,'%1.3f'),' s'))
-        xlabel('Dp (nm)')
-        ylabel('dN/dlogDp (cm^{-3})')
-
-        drawnow
-    end
-
     
     dy = zeros(size(y));
     % 1 mode0 N
@@ -337,4 +335,55 @@ function dy = modelFunc(t,y,param)
         dy(6) = dy(6) - param.coagSinkFactor*cmd^param.coagSinkExponent*exp((param.coagSinkExponent^2/2+param.coagSinkExponent*3)*ln2s)*y(6)*param.coagSinkN*1e6;
     end
 
+end
+
+function status=modelOutputFunc(t,y,flag,~)
+%MODELOUTPUTFUNC is called after every succesful step
+
+    if ~strcmp(flag,'done') %if not the last step
+        param=evalin('base','p');
+        d1_0=param.dCluster;
+        m1_0=d1_0^3;
+
+        % obtain values of alpha and d from the previous step
+        alphaBefore=evalin('base','alphaPrev');
+        dBefore=evalin('base','dPrev');
+        
+        % compute A and B at this step
+        A=y(3,end)/y(1,end)/m1_0;
+        B=y(3,end)/y(2,end)/d1_0;
+        
+        % calculate alpha and d at this step, if needed
+        if param.plotDistrDuringSim || param.PLEquations == 2
+            [alpha0,dd0] = laskeAlphaDTaulukoista(A,B,param,alphaBefore,dBefore);
+            
+            % assigning alpha and d to the workspace
+            assignin('base','alphaPrev',alpha0)
+            assignin('base','dPrev',dd0)
+            
+            d2_0=d1_0/dd0;
+        end
+        
+        % Compute the parameters of the distributions
+        [cmd,ln2s]=laskeCmdLn2s(y(4,end),y(5,end),y(6,end));
+        
+        % Plot the distribution
+        if param.plotDistrDuringSim
+            figure(1)
+            clf
+            plot_lognormal_parameters_powerlaw(y(1,end),alpha0,d1_0,d2_0,y(4,end),cmd,ln2s);
+            ylim([max(param.JMatrix(2,:))/100 max(param.JMatrix(2,:))*10]*param.timeVec(end)-param.timeVec(1))
+            xlim([1 100])
+            set(gca,'yscale','log')
+            title(strcat('t= ',num2str(t(end),'%1.3f'),' s'))
+            xlabel('Dp (nm)')
+            ylabel('dN/dlogDp (cm^{-3})')
+
+            drawnow
+
+        end
+        
+        % status=0 continues ODE solver
+        status=0;
+    end
 end

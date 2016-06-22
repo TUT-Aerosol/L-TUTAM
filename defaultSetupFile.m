@@ -8,6 +8,11 @@
 %           this version)
 p.model = 'LN';
 
+% Method for solving a system of equations in PL and PLLN models
+% 1: interpolation table
+% 2: Levenberg-Marquardt iterative algorithm
+p.PLEquations = 2;
+
 % new particle formation rates, J
 % first row:    times (s)
 % second row:   J (#/cm3 s)
